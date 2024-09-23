@@ -1,0 +1,18 @@
+/* Estilos simples para centralizar o formulário */
+.login-container {
+    width: 300px;
+    margin: 100px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+  }
+  
+  .login-container h2 {
+    margin-bottom: 20px;
+  }
+  
+  .btn-block {
+    width: 100%;
+  }
+  

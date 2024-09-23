@@ -1,0 +1,30 @@
+/* App.css */
+
+/* Estilo básico da sidebar */
+.sidebar {
+  width: 230px; /* Largura da sidebar */
+  position: fixed; /* Fixa a barra lateral na esquerda */
+  top: 0;
+  left: 0;
+  height: 100%; /* Altura completa da tela */
+  background-color: #e9ecef; /* Cor de fundo clara */
+  padding-top: 20px;
+  z-index: 1;
+  overflow-y: auto; /* Permite rolagem caso o conteúdo seja longo */
+}
+
+.sidebar .nav-link {
+  color: #333; /* Cor do texto */
+  padding: 10px 20px; /* Espaçamento interno */
+}
+
+.sidebar .nav-link:hover {
+  background-color: #e9ecef; /* Cor de fundo ao passar o mouse */
+  color: #006232; /* Cor do texto ao passar o mouse */
+}
+
+/* Estilo da área de conteúdo */
+.content {
+  margin-left: 250px; /* Espaço igual à largura da sidebar */
+  padding: 20px;
+}
