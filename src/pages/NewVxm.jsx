@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Tab, Nav, Row, Col } from 'react-bootstrap';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function NewVxm() {
   const [formData, setFormData] = useState({
@@ -17,29 +19,79 @@ function NewVxm() {
     hlaDR2: '',
     hlaDQ1: '',
     hlaDQ2: '',
-    crossmatchResult: '',
   });
+  const navigate = useNavigate();
+
+  const validateAndFormatHLA = (name, value) => {
+    const numberValue = parseInt(value, 10);
+    if (!isNaN(numberValue) && numberValue >= 0 && numberValue <= 99) {
+      return numberValue < 10 ? `0${numberValue}` : `${numberValue}`;
+    }
+    return '';
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: name.startsWith('hla') ? validateAndFormatHLA(name, value) : value,
+    }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Dados do Doador:', formData);
+// Dentro de NewVxm.js
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const alelosEspecificos = [
+    { tipo: 'A', numero: formData.hlaA1 },
+    { tipo: 'A', numero: formData.hlaA2 },
+    { tipo: 'B', numero: formData.hlaB1 },
+    { tipo: 'B', numero: formData.hlaB2 },
+    { tipo: 'C', numero: formData.hlaC1 },
+    { tipo: 'C', numero: formData.hlaC2 },
+    { tipo: 'DR', numero: formData.hlaDR1 },
+    { tipo: 'DR', numero: formData.hlaDR2 },
+    { tipo: 'DQ', numero: formData.hlaDQ1 },
+    { tipo: 'DQ', numero: formData.hlaDQ2 },
+  ].filter((alelo) => alelo.numero);
+
+  const donorData = {
+    donor_name: formData.donorName,
+    donor_sex: formData.donorSex,
+    donor_birth_date: formData.donorBirthDate,
+    donor_blood_type: formData.donorBloodType,
   };
+
+  try {
+    const response = await axios.post('http://127.0.0.1:8000/newvxm/virtual_crossmatch/', {
+      ...donorData,
+      alelos: alelosEspecificos,
+    });
+
+    console.log("Crossmatch results response:", response.data);
+
+    await axios.post('http://127.0.0.1:8000/save_crossmatch_result/', {
+      ...donorData,
+      results: response.data,
+    });
+
+    // Redireciona para a página de resultados de VXM após o sucesso, passando os dados via state
+    navigate('/vxm-results', { state: { results: response.data } });
+  } catch (error) {
+    console.error('Erro ao enviar os dados para o virtual crossmatch:', error);
+  }
+};
+
 
   return (
-    <div className="container mt-5">
-      <h2 className="text-center">Novo Virtual Crossmatch - Dados do Doador</h2>
+    <div className="container mt-2">
+      <h4 className="text-center">Novo Virtual Crossmatch - Dados do Doador</h4>
+      <hr />
       <Tab.Container defaultActiveKey="personalInfo">
         <Row>
           <Col sm={3}>
-            <Nav variant="pills" className="flex-column">
+            <Nav variant="pills" className="flex-column custom-nav">
               <Nav.Item>
                 <Nav.Link eventKey="personalInfo">Informações Pessoais</Nav.Link>
               </Nav.Item>
@@ -50,10 +102,9 @@ function NewVxm() {
           </Col>
           <Col sm={9}>
             <Tab.Content>
-              {/* Aba 1: Informações Pessoais */}
               <Tab.Pane eventKey="personalInfo">
                 <form onSubmit={handleSubmit}>
-                  <div className="form-group mb-3">
+                  <div className="form-group mb-2">
                     <label htmlFor="donorName">Nome do Doador</label>
                     <input
                       type="text"
@@ -65,8 +116,7 @@ function NewVxm() {
                       required
                     />
                   </div>
-
-                  <div className="form-group mb-3">
+                  <div className="form-group mb-2">
                     <label htmlFor="donorSex">Sexo</label>
                     <select
                       id="donorSex"
@@ -81,8 +131,7 @@ function NewVxm() {
                       <option value="Feminino">Feminino</option>
                     </select>
                   </div>
-
-                  <div className="form-group mb-3">
+                  <div className="form-group mb-2">
                     <label htmlFor="donorBirthDate">Data de Nascimento</label>
                     <input
                       type="date"
@@ -94,8 +143,7 @@ function NewVxm() {
                       required
                     />
                   </div>
-
-                  <div className="form-group mb-3">
+                  <div className="form-group mb-2">
                     <label htmlFor="donorBloodType">Tipo Sanguíneo</label>
                     <select
                       id="donorBloodType"
@@ -116,18 +164,14 @@ function NewVxm() {
                       <option value="O-">O-</option>
                     </select>
                   </div>
-
-                  
                 </form>
               </Tab.Pane>
 
-              {/* Aba 2: Informações HLA - Dividido em duas colunas */}
               <Tab.Pane eventKey="hlaInfo">
                 <form onSubmit={handleSubmit}>
                   <Row>
-                    {/* Coluna 1 */}
                     <Col md={6}>
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaA1">HLA-A(1)</label>
                         <input
                           type="text"
@@ -136,11 +180,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaA1}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaB1">HLA-B(1)</label>
                         <input
                           type="text"
@@ -149,11 +191,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaB1}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaC1">HLA-C(1)</label>
                         <input
                           type="text"
@@ -162,11 +202,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaC1}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaDR1">HLA-DR(1)</label>
                         <input
                           type="text"
@@ -175,11 +213,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaDR1}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaDQ1">HLA-DQ(1)</label>
                         <input
                           type="text"
@@ -188,14 +224,11 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaDQ1}
                           onChange={handleChange}
-                          required
                         />
                       </div>
                     </Col>
-
-                    {/* Coluna 2 */}
                     <Col md={6}>
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaA2">HLA-A(2)</label>
                         <input
                           type="text"
@@ -204,11 +237,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaA2}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaB2">HLA-B(2)</label>
                         <input
                           type="text"
@@ -217,11 +248,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaB2}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaC2">HLA-C(2)</label>
                         <input
                           type="text"
@@ -230,11 +259,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaC2}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaDR2">HLA-DR(2)</label>
                         <input
                           type="text"
@@ -243,11 +270,9 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaDR2}
                           onChange={handleChange}
-                          required
                         />
                       </div>
-
-                      <div className="form-group mb-3">
+                      <div className="form-group mb-2">
                         <label htmlFor="hlaDQ2">HLA-DQ(2)</label>
                         <input
                           type="text"
@@ -256,21 +281,18 @@ function NewVxm() {
                           className="form-control"
                           value={formData.hlaDQ2}
                           onChange={handleChange}
-                          required
                         />
                       </div>
                     </Col>
                   </Row>
-                
                 </form>
               </Tab.Pane>
             </Tab.Content>
           </Col>
         </Row>
 
-        {/* Botão de Submissão */}
-        <button type="submit" className="btn btn-primary btn-block mt-4" onClick={handleSubmit}>
-          Enviar Dados do Doador
+        <button type="submit" className="btn btn-success btn-block mt-4" onClick={handleSubmit}>
+          Fazer novo VXM
         </button>
       </Tab.Container>
     </div>

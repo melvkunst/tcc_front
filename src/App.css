@@ -1,30 +1,132 @@
 /* App.css */
 
+body {
+  padding-top: 56px;
+}
+
 /* Estilo básico da sidebar */
 .sidebar {
-  width: 230px; /* Largura da sidebar */
-  position: fixed; /* Fixa a barra lateral na esquerda */
+  width: 230px;
+  position: fixed;
   top: 0;
   left: 0;
-  height: 100%; /* Altura completa da tela */
-  background-color: #e9ecef; /* Cor de fundo clara */
-  padding-top: 20px;
+  height: 100%;
+  background-color: #e9ecef;
   z-index: 1;
-  overflow-y: auto; /* Permite rolagem caso o conteúdo seja longo */
+  overflow-y: auto;
+  margin-top: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: inherit;
+}
+
+.sidebar .nav {
+  width: 100%;
 }
 
 .sidebar .nav-link {
-  color: #333; /* Cor do texto */
-  padding: 10px 20px; /* Espaçamento interno */
+  color: #333;
+  padding: 10px 20px;
+  text-align: left;
+  font-family: inherit;
 }
 
 .sidebar .nav-link:hover {
-  background-color: #e9ecef; /* Cor de fundo ao passar o mouse */
-  color: #006232; /* Cor do texto ao passar o mouse */
+  background-color: #e9ecef;
+  color: #006232;
 }
 
 /* Estilo da área de conteúdo */
 .content {
-  margin-left: 250px; /* Espaço igual à largura da sidebar */
+  margin-left: 250px;
   padding: 20px;
+  font-family: inherit;
+}
+
+/* Ajuste de z-index para garantir que o dropdown não seja cortado */
+.navbar {
+  z-index: 1030;
+  font-family: inherit;
+}
+
+.navbar .dropdown-menu {
+  z-index: 1050;
+  min-width: auto;
+  width: auto;
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  overflow: visible;
+  right: 0;
+  left: auto !important;
+  font-family: inherit;
+}
+
+.navbar .dropdown-item {
+  padding: 0.25rem 0.5rem;
+  font-family: inherit;
+}
+
+.navbar .dropdown-toggle::after {
+  margin-left: 8px;
+}
+
+/* Personaliza a cor de fundo dos links da Nav */
+.custom-nav .nav-link {
+  background-color: #93a9c0;
+  color: white;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  transition: background-color 0.3s ease;
+  font-size: 0.950rem;
+  padding: 0.25rem 0.75rem;
+  text-align: center;
+  width: 180px;
+  align-self: center;
+  font-family: inherit;
+}
+
+/* Cor de fundo quando o link está ativo */
+.custom-nav .nav-link.active,
+.custom-nav .nav-link.show,
+.custom-nav .nav-link:active {
+  background-color: #28a745 !important;
+  color: white !important;
+  box-shadow: none !important;
+}
+
+/* Remove o foco azul padrão ao clicar no link */
+.custom-nav .nav-link:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Cor ao passar o mouse */
+.custom-nav .nav-link:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Estilo para reduzir o tamanho dos campos de entrada */
+.form-control {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  height: auto;
+  width: 90%;
+  margin: 5px 0;
+  font-family: inherit;
+}
+
+.custom-link-button {
+  color: #28a745 !important; /* Cor verde (ou qualquer cor que você preferir) */
+  text-decoration: underline; /* Mantém o estilo de link */
+}
+
+/* App.css */
+.nav-link.active {
+  font-weight: bold; /* Exemplo: deixa o link ativo em negrito */
+  color: #28a745 !important; /* Define a cor para o link ativo */
+  background-color: #e9ecef; /* Cor de fundo para o link ativo */
+  border-left: 4px solid #28a745; /* Borda para o link ativo */
 }
