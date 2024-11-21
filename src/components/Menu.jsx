@@ -1,24 +1,32 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 
 function Menu({ onLogout }) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  //console.log('[Menu] Renderizando Menu...');
 
   // Verifica se a rota atual corresponde a uma das rotas ativas
   const isActive = (paths) => paths.some((path) => location.pathname.startsWith(path));
 
+  const handleLogout = () => {
+    //console.log('[Menu] Executando logout...');
+    onLogout(); // Executa a função passada como propriedade
+    navigate('/login'); // Redireciona para a página de login
+  };
+
   return (
     <>
       {/* Barra superior fixa */}
-      <Navbar bg="light" expand="lg" className="w-100 fixed-top" style={{ zIndex: 1030 }}>
+      <Navbar bg="light" expand="lg" className="w-100 fixed-top navbar-custom" style={{ zIndex: 1030 }}>
         {/* Título à esquerda */}
-        <Navbar.Brand className="ms-3">
-          <Link to="/" className="navbar-brand">VXM - HCPA</Link>
+        <Navbar.Brand href="/" className="navbar-brand-custom">
+          VXM - HCPA
         </Navbar.Brand>
-
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav" className="justify-content-end">
           <Nav>
@@ -31,9 +39,7 @@ function Menu({ onLogout }) {
               id="profile-dropdown"
               alignRight
             >
-              <NavDropdown.Item href="/profile">Ver Perfil</NavDropdown.Item>
-              <NavDropdown.Divider />
-              <NavDropdown.Item onClick={onLogout}>Logoff</NavDropdown.Item>
+              <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
             </NavDropdown>
           </Nav>
         </Navbar.Collapse>
@@ -59,6 +65,7 @@ function Menu({ onLogout }) {
           </li>
         </ul>
       </nav>
+
     </>
   );
 }

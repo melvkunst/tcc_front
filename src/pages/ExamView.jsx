@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Importa useNavigate
-import axios from 'axios';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../api'; // Importa o cliente configurado
 import { Table, Container, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'; // Ícone de seta para voltar
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 function ExamView() {
-  const { paciente_id, exame_id } = useParams(); // Obtem os IDs dos parâmetros da URL
+  const { paciente_id, exame_id } = useParams(); // Obtém os IDs dos parâmetros da URL
   const navigate = useNavigate(); // Para navegar de volta
   const [examData, setExamData] = useState([]);
   const [patientInfo, setPatientInfo] = useState({});
@@ -14,20 +14,22 @@ function ExamView() {
   // Função para buscar dados do paciente
   const fetchPatientInfo = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/pacientes/${paciente_id}/`);
+      const response = await api.get(`api/pacientes/${paciente_id}/`);
+      //console.log('[ExamView] Dados do paciente carregados:', response.data);
       setPatientInfo(response.data);
     } catch (error) {
-      console.error("Erro ao buscar informações do paciente:", error);
+      console.error('[ExamView] Erro ao buscar informações do paciente:', error);
     }
   };
 
   // Função para buscar dados dos alelos do exame
   const fetchExamData = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/pacientes/${paciente_id}/exames/${exame_id}/alelos/`);
+      const response = await api.get(`api/pacientes/${paciente_id}/exames/${exame_id}/alelos/`);
+      //console.log('[ExamView] Dados do exame carregados:', response.data);
       setExamData(response.data);
     } catch (error) {
-      console.error("Erro ao buscar dados do exame:", error);
+      console.error('[ExamView] Erro ao buscar dados do exame:', error);
     }
   };
 

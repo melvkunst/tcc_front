@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api'; // Importa o cliente configurado
 import { Button } from 'react-bootstrap'; // Adicionando o Button do react-bootstrap
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'; // Ícone de seta para voltar
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 function NewPatient() {
   const [patientData, setPatientData] = useState({
@@ -12,17 +12,18 @@ function NewPatient() {
     tipo_sanguineo: '',
   });
   const [errors, setErrors] = useState({});
-  const { id } = useParams(); // Obtenha o ID do paciente a partir dos parâmetros da URL
+  const { id } = useParams(); // Obtem o ID do paciente a partir dos parâmetros da URL
   const navigate = useNavigate();
 
   useEffect(() => {
     if (id) {
       // Se houver um ID, significa que estamos editando um paciente existente
-      axios.get(`http://127.0.0.1:8000/api/pacientes/${id}/`)
+      api.get(`api/pacientes/${id}/`)
         .then((response) => {
+          //console.log('[NewPatient] Dados do paciente carregados:', response.data);
           setPatientData(response.data); // Preenche o formulário com os dados do paciente
         })
-        .catch((error) => console.error("Erro ao buscar paciente:", error));
+        .catch((error) => console.error('[NewPatient] Erro ao buscar paciente:', error));
     }
   }, [id]);
 
@@ -54,14 +55,15 @@ function NewPatient() {
 
     if (validateFields()) {
       const request = id
-        ? axios.put(`http://127.0.0.1:8000/api/pacientes/${id}/`, patientData) // Atualização se o ID existir
-        : axios.post('http://127.0.0.1:8000/api/pacientes/', patientData); // Criação se o ID não existir
+        ? api.put(`api/pacientes/${id}/`, patientData) // Atualização se o ID existir
+        : api.post('api/pacientes/', patientData); // Criação se o ID não existir
 
       request
         .then(() => {
+          //console.log('[NewPatient] Paciente salvo com sucesso.');
           navigate('/pacientes'); // Volta para a lista de pacientes
         })
-        .catch((error) => console.error("Erro ao salvar paciente:", error));
+        .catch((error) => console.error('[NewPatient] Erro ao salvar paciente:', error));
     }
   };
 

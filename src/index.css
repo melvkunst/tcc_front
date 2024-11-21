@@ -9,7 +9,7 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  background-color: #ffffff;
+  background-color: #F5F7FA;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -115,3 +115,4 @@ table tbody tr:hover {
   font-size: 0.9em;
   background-color: #f1f3f5;
 }
+

@@ -1,75 +1,151 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
 import About from './pages/About';
 import NewVxm from './pages/NewVxm';
 import ConsultarVxm from './pages/ConsultarVxm';
-import Menu from './components/Menu';
-import Login from './components/Login';
 import Pacientes from './pages/Pacientes';
 import ExamView from './pages/ExamView';
 import NewPacient from './pages/NewPacient';
 import VxmResults from './pages/VxmResults';
 import VxmDetails from './pages/VxmDetails';
+import LoginForm from './components/LoginForm';
+import Register from './components/Register';
+import NotFound from './pages/NotFound';
+import Menu from './components/Menu';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
-function RouteMonitor() {
-  const location = useLocation();
-
-  useEffect(() => {
-    // Regex para verificar se estamos nas rotas /pacientes ou /pacientes/:id/exames/:id
-    const pacientesPath = /^\/pacientes(\/\d+\/exames\/\d+)?$/;
-
-    if (!pacientesPath.test(location.pathname)) {
-      // Zera o localStorage se a rota não for de pacientes ou exames específicos
-      localStorage.removeItem('selectedPatientId');
-    }
-  }, [location]);
-
-  return null;
-}
-
 function App() {
-  // Estado que controla se o usuário está autenticado ou não
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Função para fazer o login
+  // Verifica o token no localStorage ao carregar o componente
+  useEffect(() => {
+    const token = localStorage.getItem('ACCESS_TOKEN');
+    //console.log('[App] Executando useEffect... Verificando token no localStorage:', token);
+    setIsAuthenticated(!!token);
+  }, []);
+
+  // Monitora mudanças no estado isAuthenticated
+  useEffect(() => {
+    //console.log('[App] Estado de autenticação atualizado:', isAuthenticated);
+  }, [isAuthenticated]);
+
   const handleLogin = () => {
-    setIsAuthenticated(true); // Ao logar, alteramos o estado para true
+    //console.log('[App] Usuário logando...');
+    // Simula o login adicionando um token ao localStorage
+    localStorage.setItem('ACCESS_TOKEN', 'seu-token-aqui');
+    setIsAuthenticated(true); // Atualiza o estado de autenticação
   };
 
-  // Função para fazer o logoff
   const handleLogout = () => {
-    setIsAuthenticated(false); // Ao deslogar, alteramos o estado para false
+    //console.log('[App] Usuário deslogando...');
+    localStorage.clear();
+    setIsAuthenticated(false); // Atualiza o estado de autenticação
   };
 
   return (
-    <div className="d-flex">
-      {isAuthenticated && <Menu onLogout={handleLogout} />}  {/* Passa a função de logoff */}
-      <div className={isAuthenticated ? "content p-4 w-100" : "login-page w-100"}>
-        <RouteMonitor /> {/* Monitoramento de rota para zerar localStorage */}
-        <Routes>
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
-          {isAuthenticated ? (
-            <>
-              <Route path="/" element={<Home />} />
-              <Route path="/newvxm" element={<NewVxm />} /> 
-              <Route path="/vxm-results" element={<VxmResults />} />
-              <Route path="/searchvxm" element={<ConsultarVxm />} />
-              <Route path="/pacientes" element={<Pacientes />} />
-              <Route path="/about" element={<About />} />
-              <Route path="*" element={<Navigate to="/" />} />
-              <Route path="/pacientes/:paciente_id/exames/:exame_id" element={<ExamView />} />
-              <Route path="/novo-paciente" element={<NewPacient />} />
-              <Route path="/novo-paciente/:id?" element={<NewPacient />} />
-              <Route path="/vxm-details/:vxmId" element={<VxmDetails />} />
-            </>
-          ) : (
-            <Route path="*" element={<Navigate to="/login" />} /> 
-          )}
-        </Routes>
+    <BrowserRouter>
+      <div className="d-flex">
+        {/* Verifica o estado de autenticação e exibe o Menu se o usuário estiver autenticado */}
+        {/*console.log('[App] Estado de autenticação atual na renderização:', isAuthenticated)*/}
+        {isAuthenticated && <Menu onLogout={handleLogout} />}
+        <div className={isAuthenticated ? 'content p-4 w-100' : 'login-page w-100'}>
+          <Routes>
+            {/* Rotas protegidas */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/newvxm"
+              element={
+                <ProtectedRoute>
+                  <NewVxm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vxm-results"
+              element={
+                <ProtectedRoute>
+                  <VxmResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/searchvxm"
+              element={
+                <ProtectedRoute>
+                  <ConsultarVxm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pacientes"
+              element={
+                <ProtectedRoute>
+                  <Pacientes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pacientes/:paciente_id/exames/:exame_id"
+              element={
+                <ProtectedRoute>
+                  <ExamView />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/novo-paciente"
+              element={
+                <ProtectedRoute>
+                  <NewPacient />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/novo-paciente/:id"
+              element={
+                <ProtectedRoute>
+                  <NewPacient />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vxm-details/:vxmId"
+              element={
+                <ProtectedRoute>
+                  <VxmDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <ProtectedRoute>
+                  <About />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Rotas públicas */}
+            <Route
+              path="/login"
+              element={<LoginForm route="/api/token/" onLogin={handleLogin} />}
+            />
+            <Route path="/register" element={<Register />} />
+            {/* Rota para páginas não encontradas */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 
