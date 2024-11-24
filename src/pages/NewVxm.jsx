@@ -130,7 +130,7 @@ function NewVxm() {
       <h4 className="text-center mb-4">Novo Virtual Crossmatch</h4>
       <Form>
         <div className="mb-4">
-          <h5>Informações Pessoais</h5>
+          <h5>Informações Pessoais - Doador</h5>
           <hr />
           <Row>
             <Col md={6}>

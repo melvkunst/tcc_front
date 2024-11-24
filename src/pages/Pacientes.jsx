@@ -123,7 +123,7 @@ function Patients() {
         <div className="container mt-2">
           <div className="shadow-box p-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
-              <h2>Lista de Pacientes</h2>
+              <h2>Lista de Receptores</h2>
               <Button variant="success" onClick={handleNewPatient} className="rounded-circle">
                 <FontAwesomeIcon icon={faPlus} />
               </Button>

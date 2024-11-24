@@ -91,14 +91,14 @@ function Home() {
         </Col>
       </Row>
       <Row className="mb-4">
-        <Col md={6}>
+        {/*<Col md={6}>
           <Card>
             <Card.Body>
               <Card.Title>Distribuição por Tipo Sanguíneo</Card.Title>
               <Pie data={bloodTypeChartData} />
             </Card.Body>
           </Card>
-        </Col>
+        </Col>*/}
         <Col md={6}>
           <Card>
             <Card.Body>
