@@ -58,7 +58,7 @@ function Menu({ onLogout }) {
             <Link className={`nav-link ${isActive(['/searchvxm', '/vxm-details']) ? 'active' : ''}`} to="/searchvxm">Consultar VXM</Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${isActive(['/pacientes', '/novo-paciente']) ? 'active' : ''}`} to="/pacientes">Receptores</Link>
+            <Link className={`nav-link ${isActive(['/receptores', '/novo-paciente']) ? 'active' : ''}`} to="/receptores">Receptores</Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${isActive(['/about']) ? 'active' : ''}`} to="/about">About</Link>

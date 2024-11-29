@@ -4,9 +4,9 @@ import Home from './pages/Home';
 import About from './pages/About';
 import NewVxm from './pages/NewVxm';
 import ConsultarVxm from './pages/ConsultarVxm';
-import Pacientes from './pages/Pacientes';
+import Receptores from './pages/Receptores';
 import ExamView from './pages/ExamView';
-import NewPacient from './pages/NewPacient';
+import NewReceptor from './pages/NewReceptor';
 import VxmResults from './pages/VxmResults';
 import VxmDetails from './pages/VxmDetails';
 import LoginForm from './components/LoginForm';
@@ -86,15 +86,15 @@ function App() {
               }
             />
             <Route
-              path="/pacientes"
+              path="/receptores"
               element={
                 <ProtectedRoute>
-                  <Pacientes />
+                  <Receptores />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/pacientes/:paciente_id/exames/:exame_id"
+              path="/receptores/:receptor_id/exames/:exame_id"
               element={
                 <ProtectedRoute>
                   <ExamView />
@@ -102,18 +102,18 @@ function App() {
               }
             />
             <Route
-              path="/novo-paciente"
+              path="/novo-receptor"
               element={
                 <ProtectedRoute>
-                  <NewPacient />
+                  <NewReceptor />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/novo-paciente/:id"
+              path="/novo-receptor/:id"
               element={
                 <ProtectedRoute>
-                  <NewPacient />
+                  <NewReceptor />
                 </ProtectedRoute>
               }
             />

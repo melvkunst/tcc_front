@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { Row, Col, Form, Button } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Form, Button, Table } from 'react-bootstrap';
+import Select from 'react-select';
 import api from '../api'; // Cliente configurado
 import { useNavigate } from 'react-router-dom';
 
 function NewVxm() {
   const [formData, setFormData] = useState({
     donorName: '',
-    donorSex: '',
+    rgct: '',
     donorBirthDate: '',
     donorBloodType: '',
     hlaA1: '',
@@ -21,53 +22,56 @@ function NewVxm() {
     hlaDQ2: '',
   });
   const [errors, setErrors] = useState({});
+  const [receptors, setReceptors] = useState([]);
+  const [selectedReceptors, setSelectedReceptors] = useState([]);
   const navigate = useNavigate();
 
-  const validateField = (name, value) => {
-    if (!value.trim()) {
-      return 'Este campo é obrigatório.';
-    }
-    if (name === 'donorName') {
-      const nameParts = value.trim().split(' ');
-      if (nameParts.length < 2) {
-        return 'O nome do doador deve conter nome e sobrenome.';
-      }
-    }
-    if (name.startsWith('hla')) {
-      const numberValue = parseInt(value, 10);
-      if (isNaN(numberValue) || numberValue < 0 || numberValue > 99) {
-        return 'O valor do HLA deve estar entre 0 e 99.';
-      }
-    }
-    return '';
-  };
+  useEffect(() => {
+    api.get('/api/receptores/')
+      .then((response) => {
+        const options = response.data.map((receptor) => ({
+          value: receptor.id,
+          label: `${receptor.nome} (${receptor.id_hcpa || 'Sem ID HCPA'})`,
+        }));
+        setReceptors(options);
+      })
+      .catch((error) => console.error('Erro ao buscar receptores:', error));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    const errorMessage = validateField(name, value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: errorMessage,
-    }));
-
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: '',
+    }));
+  };
+
+  const handleReceptorSelect = (selectedOptions) => {
+    setSelectedReceptors(selectedOptions || []);
+  };
+
+  const removeReceptor = (id) => {
+    setSelectedReceptors((prevSelected) =>
+      prevSelected.filter((receptor) => receptor.value !== id)
+    );
+  };
+
+  const handleRemoveReceptor = (id) => {
+    removeReceptor(id);
+    setSelectedReceptors((prevSelected) =>
+      prevSelected.filter((receptor) => receptor.value !== id)
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formErrors = {};
-    Object.keys(formData).forEach((field) => {
-      const error = validateField(field, formData[field]);
-      if (error) formErrors[field] = error;
-    });
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    if (selectedReceptors.length === 0) {
+      alert('Por favor, selecione pelo menos um receptor.');
       return;
     }
 
@@ -84,58 +88,65 @@ function NewVxm() {
       { tipo: 'DQ', numero: formData.hlaDQ2 },
     ].filter((alelo) => alelo.numero);
 
+    const donorHLAs = alelosEspecificos.map((alelo) => ({
+      tipo: alelo.tipo,
+      numero: parseInt(alelo.numero, 10),
+    }));
+
     const donorData = {
       donor_name: formData.donorName,
-      donor_sex: formData.donorSex,
-      donor_birth_date: formData.donorBirthDate,
-      donor_blood_type: formData.donorBloodType,
+      rgct: formData.rgct,
+      donor_birth_date: formData.donorBirthDate || null,
+      donor_blood_type: formData.donorBloodType || null,
+      alelos: alelosEspecificos,
+      selected_receptors: selectedReceptors.map((receptor) => receptor.value),
     };
 
     try {
-      const response = await api.post('api/newvxm/virtual_crossmatch/', {
-        ...donorData,
-        alelos: alelosEspecificos,
+      const virtualCrossmatchResponse = await api.post('/api/newvxm/virtual_crossmatch/', donorData);
+
+      if (virtualCrossmatchResponse.data.message) {
+        alert(virtualCrossmatchResponse.data.message);
+        return;
+      }
+
+      if (Object.keys(virtualCrossmatchResponse.data).length === 0) {
+        alert('Nenhum receptor compatível encontrado.');
+        return;
+      }
+
+      const crossmatchResults = virtualCrossmatchResponse.data;
+
+      const saveResponse = await api.post('/api/save_crossmatch_result/', {
+        rgct: donorData.rgct,
+        donor_name: donorData.donor_name,
+        donor_birth_date: donorData.donor_birth_date,
+        donor_blood_type: donorData.donor_blood_type,
+        donor_hlas: donorHLAs,
+        results: crossmatchResults,
       });
 
-      if (response.data.message) {
-        navigate('/vxm-results', { state: { errorMessage: response.data.message } });
-      } else if (Object.keys(response.data).length === 0) {
-        navigate('/vxm-results', { state: { errorMessage: 'Nenhum paciente compatível encontrado.' } });
-      } else {
-        await saveResults(response.data, donorData);
+      if (saveResponse.status === 201) {
+        alert('Crossmatch salvo com sucesso!');
+        navigate('/vxm-results', { state: { results: saveResponse.data } });
       }
     } catch (error) {
-      console.error('Erro ao enviar os dados:', error);
-      alert('Erro ao processar o virtual crossmatch.');
-    }
-  };
-
-  const saveResults = async (results, donorData) => {
-    try {
-      const saveResponse = await api.post('api/save_crossmatch_result/', {
-        ...donorData,
-        results,
-      });
-      console.log('API Save Response:', saveResponse.data); // Log para verificar os dados
-      alert('Resultados salvos com sucesso!');
-      navigate('/vxm-results', { state: { results: saveResponse.data } });
-    } catch (error) {
-      console.error('Erro ao salvar os resultados:', error);
-      alert('Erro ao salvar os resultados. Verifique o console para mais detalhes.');
+      console.error('Erro ao processar o virtual crossmatch ou salvar resultados:', error);
+      alert('Erro ao realizar o crossmatch ou salvar os resultados.');
     }
   };
 
   return (
     <div className="container mt-4 p-4 shadow-sm rounded bg-white">
-      <h4 className="text-center mb-4">Novo Virtual Crossmatch</h4>
+      <h4 className="text-center mb-4">Nova Prova Cruzada Virtual</h4>
       <Form>
         <div className="mb-4">
-          <h5>Informações Pessoais - Doador</h5>
+          <h5>Informações do Doador</h5>
           <hr />
           <Row>
             <Col md={6}>
               <Form.Group controlId="donorName" className="mb-3">
-                <Form.Label>Nome Completo</Form.Label>
+                <Form.Label>Nome Completo *</Form.Label>
                 <Form.Control
                   type="text"
                   name="donorName"
@@ -147,19 +158,16 @@ function NewVxm() {
               </Form.Group>
             </Col>
             <Col md={6}>
-              <Form.Group controlId="donorSex" className="mb-3">
-                <Form.Label>Sexo</Form.Label>
-                <Form.Select
-                  name="donorSex"
-                  value={formData.donorSex}
+              <Form.Group controlId="rgct" className="mb-3">
+                <Form.Label>RGCT *</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="rgct"
+                  value={formData.rgct}
                   onChange={handleChange}
-                  isInvalid={!!errors.donorSex}
-                >
-                  <option value="">Selecione...</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">{errors.donorSex}</Form.Control.Feedback>
+                  isInvalid={!!errors.rgct}
+                />
+                <Form.Control.Feedback type="invalid">{errors.rgct}</Form.Control.Feedback>
               </Form.Group>
             </Col>
           </Row>
@@ -201,16 +209,14 @@ function NewVxm() {
             </Col>
           </Row>
         </div>
-
         <div>
           <h5>Informações HLA</h5>
           <hr />
           <Row>
-            {/* Coluna para os campos terminando com (1) */}
             <Col md={6}>
               {['hlaA1', 'hlaB1', 'hlaC1', 'hlaDR1', 'hlaDQ1'].map((field) => (
                 <Form.Group controlId={field} key={field} className="mb-3">
-                  <Form.Label>{`HLA ${field.charAt(3).toUpperCase()}(1)`}</Form.Label>
+                  <Form.Label>{`HLA ${field.slice(3, -1).toUpperCase()}(1) *`}</Form.Label>
                   <Form.Control
                     type="text"
                     name={field}
@@ -222,12 +228,10 @@ function NewVxm() {
                 </Form.Group>
               ))}
             </Col>
-
-            {/* Coluna para os campos terminando com (2) */}
             <Col md={6}>
               {['hlaA2', 'hlaB2', 'hlaC2', 'hlaDR2', 'hlaDQ2'].map((field) => (
                 <Form.Group controlId={field} key={field} className="mb-3">
-                  <Form.Label>{`HLA ${field.charAt(3).toUpperCase()}(2)`}</Form.Label>
+                  <Form.Label>{`HLA ${field.slice(3, -1).toUpperCase()}(2) *`}</Form.Label>
                   <Form.Control
                     type="text"
                     name={field}
@@ -241,8 +245,49 @@ function NewVxm() {
             </Col>
           </Row>
         </div>
-
-
+        <div className="mt-4">
+          <h5>Selecionar Receptores</h5>
+          <hr />
+          <Form.Group controlId="receptorSearch" className="mb-3">
+            <Select
+              options={receptors}
+              isMulti
+              closeMenuOnSelect={false}
+              onChange={handleReceptorSelect}
+              placeholder="Pesquisar receptores..."
+              controlShouldRenderValue={false}
+              value={selectedReceptors}
+            />
+          </Form.Group>
+          {selectedReceptors.length > 0 && (
+            <div className="mt-3">
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedReceptors.map((receptor) => (
+                    <tr key={receptor.value}>
+                      <td>{receptor.label}</td>
+                      <td>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleRemoveReceptor(receptor.value)}
+                        >
+                          Remover
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </div>
         <div className="text-center mt-4">
           <Button variant="success" size="lg" onClick={handleSubmit}>
             Fazer Novo VXM
